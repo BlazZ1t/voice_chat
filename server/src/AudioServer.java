@@ -2,9 +2,9 @@ import java.net.*;
 import java.util.*;
 import java.io.*;
 
-public class Server {
+public class AudioServer {
     private static final int PORT = 5555;
-    private static Set<Socket> clientSockets = Collections.synchronizedSet(new HashSet<>());
+    private static final Set<Socket> clientSockets = Collections.synchronizedSet(new HashSet<>());
 
     public static void main(String[] args) {
         try (ServerSocket serverSocket = new ServerSocket(PORT)){
@@ -13,11 +13,12 @@ public class Server {
             while (true) {
                 Socket socket = serverSocket.accept();
                 clientSockets.add(socket);
+                System.out.println("Client connected");
                 new Thread(new ClientHandler(socket)).start();
             }
 
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e);
         }
     }
 
@@ -32,10 +33,13 @@ public class Server {
                 byte[] buffer = new byte[1024];
                 int bytesRead;
                 while ((bytesRead = input.read(buffer)) != -1) {
-                    broadcast(buffer, bytesRead);
+                        broadcast(buffer, bytesRead);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
+            } finally {
+                System.out.println("User disconnected");
+                closeSocket();
             }
         }
 
@@ -58,7 +62,7 @@ public class Server {
             try {
                 socket.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException(e);
             }
             clientSockets.remove(socket);
         }

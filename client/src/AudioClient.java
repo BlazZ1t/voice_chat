@@ -5,7 +5,7 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class Client {
+public class AudioClient {
     private static final String SERVER_ADDRESS = "0.0.0.0";
     private static final int SERVER_PORT = 5555;
 
@@ -86,7 +86,7 @@ public class Client {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                throw new RuntimeException();
             } finally {
                 System.out.println("Sender closed");
             }
@@ -116,8 +116,6 @@ public class Client {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
                 System.out.println("Receiver closed");
             }
         }
