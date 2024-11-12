@@ -3,10 +3,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
+import java.util.Scanner;
 
 public class Client {
     private static final String SERVER_ADDRESS = "0.0.0.0";
     private static final int SERVER_PORT = 5555;
+
 
     public static void main(String[] args) {
         AudioFormat format = new AudioFormat(44100, 16, 1, true, true);
@@ -38,13 +40,24 @@ public class Client {
         }
     }
 
+
+
     private static class Sender implements Runnable {
         private final TargetDataLine targetLine;
         private final Socket socket;
+        private char disconnectIndicator = 'F';
 
         public Sender(TargetDataLine targetLine, Socket socket) {
             this.targetLine = targetLine;
             this.socket = socket;
+        }
+
+        protected char callDisconnectIndicator() {
+            return disconnectIndicator;
+        }
+
+        protected void setDisconnectIndicator(char status) {
+            disconnectIndicator = status;
         }
 
         @Override
@@ -52,16 +65,30 @@ public class Client {
             try (OutputStream output = socket.getOutputStream()) {
                 byte[] buffer = new byte[1024];
                 int bytesRead;
+                Scanner sc = new Scanner(System.in);
+
+                Thread inputThread = new Thread(() -> {
+                    while (sc.hasNextLine()) {
+                        setDisconnectIndicator(sc.next().charAt(0));
+                        if (callDisconnectIndicator() == 'Q') {
+                            break;
+                        }
+                    }
+                });
+                inputThread.start();
                 while ((bytesRead = targetLine.read(buffer, 0, buffer.length)) != -1) {
                     if (!socket.isClosed()) {
+                        if (disconnectIndicator == 'Q') {
+                            socket.close();
+                            break;
+                        }
                         output.write(buffer, 0, bytesRead);
-                    } else {
-                        System.out.println("Socket is closed.");
-                        break;
                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                System.out.println("Sender closed");
             }
         }
     }
@@ -84,10 +111,14 @@ public class Client {
                 while ((bytesRead = input.read(buffer)) != -1) {
                     if (!socket.isClosed()) {
                         sourceLine.write(buffer, 0, bytesRead);
+                    } else {
+                        break;
                     }
                 }
             } catch (IOException e) {
                 e.printStackTrace();
+            } finally {
+                System.out.println("Receiver closed");
             }
         }
     }
