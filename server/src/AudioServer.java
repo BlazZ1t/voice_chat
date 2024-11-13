@@ -14,6 +14,7 @@ public class AudioServer {
                 Socket socket = serverSocket.accept();
                 clientSockets.add(socket);
                 System.out.println("Client connected");
+                System.out.println("New clients list: " + clientSockets);
                 new Thread(new ClientHandler(socket)).start();
             }
 
@@ -38,8 +39,9 @@ public class AudioServer {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             } finally {
-                System.out.println("User disconnected");
                 closeSocket();
+                System.out.println("User disconnected");
+                System.out.println("New clients list: " + clientSockets);
             }
         }
 
@@ -64,7 +66,9 @@ public class AudioServer {
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            clientSockets.remove(socket);
+            synchronized (clientSockets) {
+                clientSockets.remove(socket);
+            }
         }
     }
 }
