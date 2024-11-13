@@ -4,7 +4,7 @@ import java.net.*;
 import java.util.*;
 
 public class AudioClient {
-
+    //TODO: rethink how disconnect from audio server will work
     public static class Sender implements Runnable {
         private final TargetDataLine targetLine;
         private final Socket socket;

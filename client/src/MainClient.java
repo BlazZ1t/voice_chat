@@ -26,6 +26,7 @@ public class MainClient {
 
     private record Sender(Socket socket) implements Runnable {
         //TODO: Add ability to connect to existent audio servers
+        //TODO: Add ability to disconnect from audio servers
         @Override
         public void run() {
             try {
