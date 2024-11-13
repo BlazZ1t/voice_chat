@@ -4,43 +4,8 @@ import java.net.*;
 import java.util.*;
 
 public class AudioClient {
-    private static final String SERVER_ADDRESS = "0.0.0.0";
-    private static final int SERVER_PORT = 5555;
 
-
-    public static void main(String[] args) {
-        AudioFormat format = new AudioFormat(44100, 16, 1, true, true);
-        DataLine.Info targetInfo = new DataLine.Info(TargetDataLine.class, format);
-        DataLine.Info sourceInfo = new DataLine.Info(SourceDataLine.class, format);
-
-        try (Socket socket = new Socket(SERVER_ADDRESS, SERVER_PORT)) {
-            System.out.println("Connected to server: " + socket.getInetAddress());
-
-            TargetDataLine targetLine = (TargetDataLine) AudioSystem.getLine(targetInfo);
-            SourceDataLine sourceLine = (SourceDataLine) AudioSystem.getLine(sourceInfo);
-
-            targetLine.open(format);
-            sourceLine.open(format);
-
-            targetLine.start();
-            sourceLine.start();
-
-            Thread senderThread = new Thread(new Sender(targetLine, socket));
-            Thread receiverThread = new Thread(new Receiver(sourceLine, socket));
-            senderThread.start();
-            receiverThread.start();
-
-            senderThread.join(); // Wait for the sender thread to finish
-            receiverThread.join();
-
-        } catch (LineUnavailableException | IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-
-    private static class Sender implements Runnable {
+    public static class Sender implements Runnable {
         private final TargetDataLine targetLine;
         private final Socket socket;
         private char disconnectIndicator = 'F';
@@ -91,7 +56,7 @@ public class AudioClient {
         }
     }
 
-    private static class Receiver implements Runnable {
+    public static class Receiver implements Runnable {
         private final Socket socket;
         private final SourceDataLine sourceLine;
 
