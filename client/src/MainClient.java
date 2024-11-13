@@ -25,7 +25,7 @@ public class MainClient {
     }
 
     private record Sender(Socket socket) implements Runnable {
-        //TODO: Add ability to connect to existent audio servers
+        //TODO: Debug connection to existent audio servers
         //TODO: Add ability to disconnect from audio servers
         @Override
         public void run() {
@@ -35,13 +35,17 @@ public class MainClient {
                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                     String command = sc.nextLine();
 
-                    if (command.equalsIgnoreCase("START_AUDIO_SERVER")) {
+                    if (command.startsWith("CONNECT_SERVER")) {
                         out.println(command);
                         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                         String response = in.readLine();
-                        if (response.startsWith("AUDIO_SERVER_STARTED")) {
+                        if (response.startsWith("AUDIO_SERVER")) {
                             int audioPort = Integer.parseInt(response.split(" ")[1]);
                             connectToAudioServer(audioPort);
+                            continue;
+                        } else if (response.equalsIgnoreCase("AUDIO_SERVER_NOT_EXISTS")) {
+                            System.out.println("Server not found");
+                            continue;
                         }
                     }
                     out.println(command);
