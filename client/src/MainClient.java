@@ -34,23 +34,35 @@ public class MainClient {
                 while (sc.hasNextLine()) {
                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                     String command = sc.nextLine();
-
-                    if (command.startsWith("CONNECT_SERVER")) {
-                        out.println(command);
-                        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                        String response = in.readLine();
-                        if (response.startsWith("AUDIO_SERVER")) {
-                            int audioPort = Integer.parseInt(response.split(" ")[1]);
-                            connectToAudioServer(audioPort);
-                            continue;
-                        } else if (response.equalsIgnoreCase("AUDIO_SERVER_NOT_EXISTS")) {
-                            System.out.println("Server not found");
-                            continue;
-                        }
-                    }
                     out.println(command);
                 }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
 
+        }
+
+
+    }
+
+    private record Receiver(Socket socket) implements Runnable {
+
+        @Override
+        public void run() {
+            try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
+                String message;
+                while ((message = in.readLine()) != null) {
+                    if (message.startsWith("AUDIO_SERVER")) {
+                        int audioPort = Integer.parseInt(message.split(" ")[1]);
+                        System.out.println(message);
+                        connectToAudioServer(audioPort);
+                        continue;
+                    } else if (message.equalsIgnoreCase("AUDIO_SERVER_NOT_EXISTS")) {
+                        System.out.println("Server not found");
+                        continue;
+                    }
+                    System.out.println(message);
+                }
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -83,21 +95,6 @@ public class MainClient {
                 receiverThread.join();
 
             } catch (LineUnavailableException | IOException | InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-    private record Receiver(Socket socket) implements Runnable {
-
-        @Override
-        public void run() {
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))) {
-                String message;
-                while ((message = in.readLine()) != null) {
-                    System.out.println(message);
-                }
-            } catch (IOException e) {
                 throw new RuntimeException(e);
             }
         }
