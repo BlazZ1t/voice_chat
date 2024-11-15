@@ -26,6 +26,11 @@ public class AudioServer {
         }
     }
 
+    @Override
+    public String toString() {
+        return "This server is running on port " + port + "\nConnected clients are\n" + clientSockets;
+    }
+
     private class ClientHandler implements Runnable {
         private final Socket socket;
 
@@ -41,8 +46,8 @@ public class AudioServer {
                 while ((bytesRead = input.read(buffer)) != -1) {
                     broadcast(buffer, bytesRead);
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } catch (IOException ignored) {
+
             } finally {
                 closeSocket();
                 System.out.println("Audio client disconnected");

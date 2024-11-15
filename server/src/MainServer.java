@@ -13,6 +13,8 @@ public class MainServer {
         try (ServerSocket serverSocket = new ServerSocket(PORT)) {
             System.out.println("The server is running on " + serverSocket.getInetAddress() + " " + serverSocket.getLocalPort());
 
+            new Thread(new ServerInteractions()).start();
+
             while (true) {
                 Socket clientSocket = serverSocket.accept();
                 clientSockets.add(clientSocket);
@@ -39,8 +41,8 @@ public class MainServer {
                         broadcast(message, socket);
                     }
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            } catch (IOException ignored) {
+
             } finally {
                 try {
                     socket.close();
@@ -92,6 +94,26 @@ public class MainServer {
 
             } catch (IOException e) {
                 throw new RuntimeException(e);
+            }
+        }
+    }
+
+    private static class ServerInteractions implements Runnable {
+
+        @Override
+        public void run() {
+            Scanner sc = new Scanner(System.in);
+            String command;
+            while ((command = sc.nextLine()) != null) {
+                if (command.startsWith("GET_CLIENTS")) {
+                    System.out.println(clientSockets);
+                }
+                if (command.startsWith("GET_AUDIO_SERVERS")) {
+                    System.out.println(audioServers);
+                }
+                if (command.startsWith("GET_SERVER")) {
+                    System.out.println(audioServers.get(Integer.parseInt(command.split(" ")[1])));
+                }
             }
         }
     }
